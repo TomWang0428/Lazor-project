@@ -58,12 +58,26 @@ def read_file(ftpr):
     return grid, block_list, laser_start, laser_direction, goal_p
 
 
-
-
-
-
-
-
+def use_unused(grid, unused_bl, laser_start, laser_direction, goal_p, t2_grid=None):
+    re_grid= remake_grid(grid)
+    path, p_dir = lazor_path(re_grid, laser_start, laser_direction)
+    impossible = find_possible(path, grid)
+    rows = len(grid)
+    cols = len(grid[1])
+    all_cor = [(x, y) for x in range(cols) for y in range(rows)]
+    diff = [item for item in all_cor if item not in impossible]
+    t_block_list = unused_bl.copy()
+    t_grid = copy.deepcopy(grid)
+    finish_flag = 0
+    for pos in diff:
+        for block in unused_bl:
+            if t_grid[pos[0]][pos[1]] == "o":
+                t_grid[pos[0]][pos[1]] = block
+                t_block_list.remove(block)
+    unused_block = t_block_list.copy()
+    for i in range (len(unused_block)):
+        t2_grid, finish_flag, ub = lazor_solve(t_grid, laser_start, laser_direction, goal_p, [unused_block[i]], finish_flag)
+    return t2_grid, unused_bl
 
 
 
@@ -124,14 +138,15 @@ def lazor_path(re_grid, laser_start, laser_direction):
                 elif "B" in re_grid[x][y]:
                     break
                 if re_grid[x][y] == "C" or re_grid[x][y] == "CC":
-                    if refract_n % 2 == 0:
+                    if refract_n % 2 == 0 or re_grid[x][y] == "CC":
                         if re_grid[x + laser_direction[0]][y + laser_direction[1]] == "C" or re_grid[x + laser_direction[0]][y + laser_direction[1]] == "CC":
                             c_dir = laser_direction
                             if x % 2 == 0:
-                                add_path = lazor_path(re_grid, (x, y), (-laser_direction[0], laser_direction[1]))
+                                add_path, add_pt = lazor_path(re_grid, (x, y), (-laser_direction[0], laser_direction[1]))
                             if y % 2 == 0:
-                                add_path = lazor_path(re_grid, (x,y), (laser_direction[0], - laser_direction[1]))
+                                add_path, add_pt = lazor_path(re_grid, (x,y), (laser_direction[0], - laser_direction[1]))
                             path.append(add_path)
+                            pt_dir.append(add_pt)
                     else:
                         c_dir = laser_direction
                     refract_n += 1
@@ -152,25 +167,31 @@ def lazor_path(re_grid, laser_start, laser_direction):
                     if refract_n % 2 == 0:
                         c_dir = laser_direction
                         if x % 2 == 0:
-                            add_path = lazor_path(re_grid, (x, y), (-laser_direction[0], laser_direction[1]))
+                            add_path, add_pt = lazor_path(re_grid, (x, y), (-laser_direction[0], laser_direction[1]))
                         if y % 2 == 0:
-                            add_path = lazor_path(re_grid, (x, y), (laser_direction[0], - laser_direction[1]))
+                            add_path, add_pt = lazor_path(re_grid, (x, y), (laser_direction[0], - laser_direction[1]))
                         path.append(add_path)
+                        pt_dir.append(add_pt)
                     else:
-
                         c_dir = laser_direction
                 refract_n += 1
+            else:
+                c_dir = laser_direction
             pt_dir.append(c_dir)
             x = x + c_dir[0]
             y = y + c_dir[1]
             if x < width and y < height and x >=0 and y >= 0:
-                path.append((x,y))
-                list(set(flatten_list(path)))
-            elif (x,y) in path and pt_dir[path.index((x,y))] == c_dir:
+                flatten_list(path)
+                flatten_list(pt_dir)
+                if (x,y) in path and pt_dir[path.index((x,y))] == c_dir:
+                    break
+                else:
+                    path.append((x, y))
+            else:
                 break
     else:
         return
-    return list(set(flatten_list(path)))
+    return flatten_list(path), flatten_list(pt_dir)
 
 def find_possible(path, grid):
     width = len(grid)
@@ -205,15 +226,9 @@ def lazor_solve(grid, laser_start, laser_direction, goal_p, block_list, finish_f
         f_grid = []
 
     re_grid = remake_grid(grid)
-    path = lazor_path(re_grid, laser_start, laser_direction)
-
-    if set(goal_p).issubset(path):
-        finish_flag = 1
-        f_grid = copy.deepcopy(grid)  # update f_grid with the current grid as the solution
-        return f_grid, finish_flag
-
+    path, p_dir = lazor_path(re_grid, laser_start, laser_direction)
+    list(set(flatten_list(path)))
     possible_placement = find_possible(path, grid)
-
     for pos in possible_placement:
         if finish_flag == 0 and grid[pos[0]][pos[1]] == 'o':
             for block in block_list:
@@ -222,28 +237,34 @@ def lazor_solve(grid, laser_start, laser_direction, goal_p, block_list, finish_f
                 t_block_list = block_list.copy()
                 t_block_list.remove(block)
                 # Recursively solve with the updated grid and block list
-                f_grid, finish_flag = lazor_solve(t_grid, laser_start, laser_direction, goal_p, t_block_list, finish_flag, f_grid)
+                f_grid, finish_flag, bl = lazor_solve(t_grid, laser_start, laser_direction, goal_p, t_block_list, finish_flag, f_grid)
                 if finish_flag:
-                    return f_grid, finish_flag
-
-    return f_grid, finish_flag
+                    return f_grid, finish_flag, t_block_list
+    if set(goal_p).issubset(set(path)):
+        finish_flag = 1
+        f_grid = copy.deepcopy(grid)  # update f_grid with the current grid as the solution
+        return f_grid, finish_flag, block_list
+    return f_grid, finish_flag, block_list
 
 
 
 if __name__ == "__main__":
+    test_grid = [['o', 'B', 'A'], ['o', 'o', 'o'], ['A', 'C', 'o']]
     """
     grid = [["o"] * 4 for _ in range(4)]
     laser_start = (7, 2)
     laser_direction = (-1, 1)
     goal_p = (0, 3), (3, 4), (5, 2), (7, 4)
-    test_grid = [['o', 'o', 'o', 'o'], ['o', 'o', 'o', 'o'], ['o', 'A', 'o', 'o'], ['o', 'C', 'A', 'o']]
+    
     block_list = ["A", "C", "A"]
     finish_flag = 0
     re_grid = remake_grid(test_grid)
-    path = lazor_path(re_grid, laser_start, laser_direction)
+    path, dir = lazor_path(re_grid, laser_start, laser_direction)
     """
-    ftpr = 'mad_4.bff'
+    ftpr = 'tiny_5.bff'
     grid, block_list, laser_start, laser_direction, goal_p = read_file(ftpr)
     finish_flag = 0
-    print(lazor_solve(grid, laser_start, laser_direction, goal_p, block_list, finish_flag))
-
+    f_grid, finish_flag, unused_bl = lazor_solve(grid, laser_start, laser_direction, goal_p, block_list, finish_flag)
+    if len(unused_bl) >= 1:
+        f_grid, unused_bl = use_unused(f_grid, unused_bl, laser_start, laser_direction, goal_p)
+    print(f_grid)
