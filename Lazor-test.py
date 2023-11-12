@@ -26,7 +26,9 @@ def read_file(ftpr):
     A_block = 0
     B_block = 0
     C_block = 0
-    block_list = []
+    block_list_AC = []
+    block_list_B = []
+    lasers = []
     laser_start = ()
     laser_direction = ()
     goal_p = []
@@ -48,20 +50,26 @@ def read_file(ftpr):
             parts = line.split()
             laser_start = (int(parts[2]), int(parts[1]))
             laser_direction = (int(parts[4]), int(parts[3]))
+            lasers.append(Lazor(laser_start, laser_direction))
 
         if line.startswith('P'):
             parts = line.split()
             if len(parts) == 3:
                 goal_p.append((int(parts[2]), int(parts[1])))
 
-    block_list = ['A'] * A_block + ['B'] * B_block + ['C'] * C_block
-    return grid, block_list, laser_start, laser_direction, goal_p
+    block_list_AC = ['A'] * A_block + ['C'] * C_block
+    block_list_B = ['B'] * B_block
+    return grid, block_list_AC, block_list_B, lasers, goal_p
 
 
-def use_unused(grid, unused_bl, laser_start, laser_direction, goal_p, t2_grid=None):
+def use_unused(grid, unused_bl, lasers, goal_p, t2_grid=None):
     re_grid= remake_grid(grid)
-    path, p_dir = lazor_path(re_grid, laser_start, laser_direction)
-    impossible = find_possible(path, grid)
+    impossible = []
+    for lasor in lasers:
+        laser_start = lasor.laser_start
+        laser_direction = lasor.laser_direction
+        path, p_dir = lazor_path(lasor, laser_direction)
+        impossible = impossible + find_possible(path, grid)
     rows = len(grid)
     cols = len(grid[1])
     all_cor = [(x, y) for x in range(cols) for y in range(rows)]
@@ -80,14 +88,13 @@ def use_unused(grid, unused_bl, laser_start, laser_direction, goal_p, t2_grid=No
     return t2_grid, unused_bl
 
 
-
-
-
 def all_letter_permutations(letters):
     perms = itertools.permutations(letters)
     perms_list = [list(perm) for perm in set(perms)]
     perms_list.sort()
     return perms_list
+
+
 def flatten_list(lst):
     flat_list = []
     for item in lst:
@@ -96,6 +103,8 @@ def flatten_list(lst):
         else:
             flat_list.append(item)
     return flat_list
+
+
 def remake_grid(grid):
     width = len(grid)
     height = len(grid[0])
@@ -112,11 +121,12 @@ def remake_grid(grid):
     return re_grid
 
 
-def lazor_path(re_grid, laser_start, laser_direction):
+def lazor_path(re_grid, laser):
     width = len(re_grid)
     height = len(re_grid[0])
-    x = laser_start[0]
-    y = laser_start[1]
+    x = laser.laser_start[0]
+    y = laser.laser_start[1]
+    laser_direction = laser.laser_direction
     path = [(x,y)]
     refract_n = 0
     pt_dir = []
@@ -142,11 +152,13 @@ def lazor_path(re_grid, laser_start, laser_direction):
                         if re_grid[x + laser_direction[0]][y + laser_direction[1]] == "C" or re_grid[x + laser_direction[0]][y + laser_direction[1]] == "CC":
                             c_dir = laser_direction
                             if x % 2 == 0:
-                                add_path, add_pt = lazor_path(re_grid, (x, y), (-laser_direction[0], laser_direction[1]))
+                                lasor = Lazor((x, y),(-laser_direction[0], laser_direction[1]))
+                                add_path, add_pt = lazor_path(re_grid, lasor)
                             if y % 2 == 0:
-                                add_path, add_pt = lazor_path(re_grid, (x,y), (laser_direction[0], - laser_direction[1]))
-                            path.append(add_path)
-                            pt_dir.append(add_pt)
+                                lasor = Lazor((x, y),(laser_direction[0], - laser_direction[1]))
+                                add_path, add_pt = lazor_path(re_grid, lasor)
+                            path.extend(add_path)
+                            pt_dir.extend(add_pt)
                     else:
                         c_dir = laser_direction
                     refract_n += 1
@@ -167,11 +179,13 @@ def lazor_path(re_grid, laser_start, laser_direction):
                     if refract_n % 2 == 0:
                         c_dir = laser_direction
                         if x % 2 == 0:
-                            add_path, add_pt = lazor_path(re_grid, (x, y), (-laser_direction[0], laser_direction[1]))
+                            lasor = Lazor((x, y), (-laser_direction[0], laser_direction[1]))
+                            add_path, add_pt = lazor_path(re_grid, lasor)
                         if y % 2 == 0:
-                            add_path, add_pt = lazor_path(re_grid, (x, y), (laser_direction[0], - laser_direction[1]))
-                        path.append(add_path)
-                        pt_dir.append(add_pt)
+                            lasor = Lazor((x, y), (laser_direction[0], - laser_direction[1]))
+                            add_path, add_pt = lazor_path(re_grid, lasor)
+                        path.extend(add_path)
+                        pt_dir.extend(add_pt)
                     else:
                         c_dir = laser_direction
                 refract_n += 1
@@ -193,6 +207,7 @@ def lazor_path(re_grid, laser_start, laser_direction):
         return
     return flatten_list(path), flatten_list(pt_dir)
 
+
 def find_possible(path, grid):
     width = len(grid)
     height = len(grid[0])
@@ -207,10 +222,11 @@ def find_possible(path, grid):
                 possible_placement.append((x // 2 - 1, y // 2))
         if y % 2 == 0:
             if y // 2 <= height - 1:
-             possible_placement.append((x // 2, y // 2))
+                possible_placement.append((x // 2, y // 2))
             if y // 2 - 1 >= 0:
                 possible_placement.append((x // 2, y // 2 - 1))
     return list(set(possible_placement))
+
 
 def vis_path(re_grid,path):
     path = list(set(flatten_list(path)))
@@ -221,12 +237,14 @@ def vis_path(re_grid,path):
 
 
 
-def lazor_solve(grid, laser_start, laser_direction, goal_p, block_list, finish_flag, f_grid=None):
+def lazor_solve(grid, lasers, goal_p, block_list, finish_flag, f_grid=None):
     if f_grid is None:
         f_grid = []
-
+    path = []
     re_grid = remake_grid(grid)
-    path, p_dir = lazor_path(re_grid, laser_start, laser_direction)
+    for laser in lasers:
+        pathh, p_dir = lazor_path(re_grid, laser)
+        path = path + pathh
     list(set(flatten_list(path)))
     possible_placement = find_possible(path, grid)
     for pos in possible_placement:
@@ -237,7 +255,7 @@ def lazor_solve(grid, laser_start, laser_direction, goal_p, block_list, finish_f
                 t_block_list = block_list.copy()
                 t_block_list.remove(block)
                 # Recursively solve with the updated grid and block list
-                f_grid, finish_flag, bl = lazor_solve(t_grid, laser_start, laser_direction, goal_p, t_block_list, finish_flag, f_grid)
+                f_grid, finish_flag, bl = lazor_solve(t_grid, lasers, goal_p, t_block_list, finish_flag, f_grid)
                 if finish_flag:
                     return f_grid, finish_flag, t_block_list
     if set(goal_p).issubset(set(path)):
@@ -246,6 +264,11 @@ def lazor_solve(grid, laser_start, laser_direction, goal_p, block_list, finish_f
         return f_grid, finish_flag, block_list
     return f_grid, finish_flag, block_list
 
+
+class Lazor:
+    def __init__(self, laser_start, laser_direction):
+        self.laser_start = laser_start
+        self.laser_direction = laser_direction
 
 
 if __name__ == "__main__":
@@ -262,9 +285,9 @@ if __name__ == "__main__":
     path, dir = lazor_path(re_grid, laser_start, laser_direction)
     """
     ftpr = 'tiny_5.bff'
-    grid, block_list, laser_start, laser_direction, goal_p = read_file(ftpr)
+    grid, block_list, lasers, goal_p = read_file(ftpr)
     finish_flag = 0
-    f_grid, finish_flag, unused_bl = lazor_solve(grid, laser_start, laser_direction, goal_p, block_list, finish_flag)
+    f_grid, finish_flag, unused_bl = lazor_solve(grid, lasers, goal_p, block_list, finish_flag)
     if len(unused_bl) >= 1:
-        f_grid, unused_bl = use_unused(f_grid, unused_bl, laser_start, laser_direction, goal_p)
+        f_grid, unused_bl = use_unused(f_grid, unused_bl, lasers, goal_p)
     print(f_grid)
