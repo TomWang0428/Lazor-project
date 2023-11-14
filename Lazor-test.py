@@ -68,23 +68,27 @@ def use_unused(grid, unused_bl, lasers, goal_p, t2_grid=None):
     for lasor in lasers:
         laser_start = lasor.laser_start
         laser_direction = lasor.laser_direction
-        path, p_dir = lazor_path(lasor, laser_direction)
+        path, p_dir = lazor_path(re_grid, lasor)
         impossible = impossible + find_possible(path, grid)
     rows = len(grid)
     cols = len(grid[1])
     all_cor = [(x, y) for x in range(cols) for y in range(rows)]
     diff = [item for item in all_cor if item not in impossible]
-    t_block_list = unused_bl.copy()
+
     t_grid = copy.deepcopy(grid)
     finish_flag = 0
     for pos in diff:
         for block in unused_bl:
+            t_block_list = unused_bl.copy()
             if t_grid[pos[0]][pos[1]] == "o":
                 t_grid[pos[0]][pos[1]] = block
                 t_block_list.remove(block)
+            if t_block_list == []:
+                break
     unused_block = t_block_list.copy()
-    for i in range (len(unused_block)):
-        t2_grid, finish_flag, ub = lazor_solve(t_grid, laser_start, laser_direction, goal_p, [unused_block[i]], finish_flag)
+    t2_grid = copy.deepcopy(t_grid)
+    for i in range(len(unused_block)):
+        t2_grid, finish_flag, ub = lazor_solve(t2_grid, laser_start, laser_direction, goal_p, [unused_block[i]], finish_flag)
     return t2_grid, unused_bl
 
 
@@ -237,7 +241,7 @@ def vis_path(re_grid,path):
 
 
 
-def lazor_solve(grid, lasers, goal_p, block_list, finish_flag, f_grid=None):
+def lazor_solve(grid, lasers, goal_p, block_list, finish_flag, f_grid = None, u_block_list = None):
     if f_grid is None:
         f_grid = []
     path = []
@@ -255,20 +259,22 @@ def lazor_solve(grid, lasers, goal_p, block_list, finish_flag, f_grid=None):
                 t_block_list = block_list.copy()
                 t_block_list.remove(block)
                 # Recursively solve with the updated grid and block list
-                f_grid, finish_flag, bl = lazor_solve(t_grid, lasers, goal_p, t_block_list, finish_flag, f_grid)
+                f_grid, finish_flag, u_block_list = lazor_solve(t_grid, lasers, goal_p, t_block_list, finish_flag, f_grid)
                 if finish_flag:
-                    return f_grid, finish_flag, t_block_list
+                    return f_grid, finish_flag, u_block_list
     if set(goal_p).issubset(set(path)):
         finish_flag = 1
         f_grid = copy.deepcopy(grid)  # update f_grid with the current grid as the solution
-        return f_grid, finish_flag, block_list
-    return f_grid, finish_flag, block_list
+        u_block_list = copy.deepcopy(t_block_list)
+        return f_grid, finish_flag, u_block_list
+    return f_grid, finish_flag, u_block_list
 
 
 class Lazor:
     def __init__(self, laser_start, laser_direction):
         self.laser_start = laser_start
         self.laser_direction = laser_direction
+
 
 
 if __name__ == "__main__":
@@ -285,9 +291,11 @@ if __name__ == "__main__":
     path, dir = lazor_path(re_grid, laser_start, laser_direction)
     """
     ftpr = 'tiny_5.bff'
-    grid, block_list, lasers, goal_p = read_file(ftpr)
+    grid, block_list_AC, block_list_B, lasers, goal_p = read_file(ftpr)
     finish_flag = 0
-    f_grid, finish_flag, unused_bl = lazor_solve(grid, lasers, goal_p, block_list, finish_flag)
+    f_grid, finish_flag, unused_bl = lazor_solve(grid, lasers, goal_p, block_list_AC, finish_flag)
+    unused_bl.append(block_list_B)
+    unused_bl = flatten_list(unused_bl)
     if len(unused_bl) >= 1:
         f_grid, unused_bl = use_unused(f_grid, unused_bl, lasers, goal_p)
     print(f_grid)

@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="043905e4-edab-47aa-940b-cc5280c24ee1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Lazor-test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Lazor-test.py" afterDir="false" />
-    </list>
+    <list default="true" id="043905e4-edab-47aa-940b-cc5280c24ee1" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -18,6 +16,9 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 3
+}]]></component>
   <component name="ProjectId" id="2XsSvdvg8ICQgXwvkugixXwfNkI" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -25,9 +26,12 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Users/karrol_s/Desktop/Lazor-project"
+    "last_opened_file_path": "/Users/karrol_s/Desktop/Lazor-project",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -38,7 +42,11 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1699416526070</updated>
+      <workItem from="1699927828768" duration="46000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>
