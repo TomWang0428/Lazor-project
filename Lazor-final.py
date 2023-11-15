@@ -79,7 +79,8 @@ def flatten_list(lst):
 
 class Grid:
     """
-    Represents a grid on which blocks can be placed. It includes methods for updating the grid and remaking it for laser path calculations
+    Represents a grid on which blocks can be placed. It includes methods for
+    updating the grid and remaking it for laser path calculations
     """
     def __init__(self, grid_data):
         """
@@ -306,7 +307,8 @@ class Laser:
 
 class Solver:
     """
-    Orchestrates the placement of blocks on the grid and checks whether the placement meets the puzzle's goals
+    Orchestrates the placement of blocks on the grid and checks whether the
+    placement meets the puzzle's goals
     """
     def __init__(self, grid, blocks, lasers, goals):
         """
