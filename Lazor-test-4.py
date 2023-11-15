@@ -12,12 +12,14 @@ def count_o_in_2d_list(matrix):
                 count += 1
     return count
 
+
 def vis_path(path,re_grid):
     path = list(set(flatten_list(path)))
     t_regrid = copy.deepcopy(re_grid)
     for i in range(len(path)):
         t_regrid[path[i][0]][path[i][1]] = "1"
     return t_regrid
+
 
 def flatten_list(lst):
     flat_list = []
@@ -27,6 +29,7 @@ def flatten_list(lst):
         else:
             flat_list.append(item)
     return flat_list
+
 
 class Grid:
     def __init__(self, grid_data):
@@ -72,6 +75,7 @@ class Grid:
 class Block:
     def __init__(self, block_type):
         self.block_type = block_type
+
 
 class Laser:
     def __init__(self, start, direction):
@@ -167,6 +171,7 @@ class Laser:
             return
         return flatten_list(path), flatten_list(pt_dir)
 
+
 class Solver:
     def __init__(self, grid, blocks, lasers, goals):
         self.grid = grid
@@ -198,7 +203,36 @@ class Solver:
         else:
             return False
 
+
 def read_file(ftpr):
+    '''
+        This will read basic settings of lazor game from a ".bff" file and save in
+        variables to use later.
+
+        **Parameters**
+
+            ftpr: *str*
+                The name and path of the ".bff" file to load.
+
+        **Returns**
+
+            grid: *list, list, str*
+                A list of lists, holding strings specifying the starting grid of the
+                game:
+                    'o' - White - place that can put blocks
+                    'x' - Grey - place that must be left empty
+                    'A' - Green - a set type A block in this position
+                    'B' - Black - a set type B block in this position
+                    'C' - Blue - a set type C block in this position
+            block_list_AC: *list, str*
+                A list of block A and C to be put on the grid.
+            block_list_B: *list, str*
+                A list of block B to be put on the grid.
+            lasers: *list, obj*
+                A list of lazor object as the game setting.
+            goal_p: *list, tuple*
+                A list of goal positions (to be intersected) as the game setting.
+        '''
     with open(ftpr, 'r') as f:
         lines = f.readlines()
 
@@ -254,7 +288,7 @@ def read_file(ftpr):
 
 
 def main(filepath):
-    #filepath = 'yarn_5.bff'
+    # filepath = 'yarn_5.bff'
     grid_data, block_list_AC, block_list_B, lasers_data, goals = read_file(filepath)
 
     grid = Grid(grid_data)
@@ -302,6 +336,27 @@ def get_colors():
 
 
 def print_solution(solution_list, blockSize=100, name="solution"):
+    '''
+        This function will generate solution output in image:
+
+        **Parameters**
+
+            solution_list: *list, list, str*
+                A list of lists, holding str specifying the solution on the grid:
+                'o' - White - place that can put blocks
+                'x' - Grey - place that must be left empty
+                'A' - Green - type A block
+                'B' - Black - type B block
+                'C' - Blue - type C block
+            blockSize: *int, optional*
+                How many pixels each block is comprised of.
+            name: *str, optional*
+                The name of the maze.png file to save.
+
+        **Returns**
+
+            None
+        '''
     # nBlocks = len(solution_list)
     sol = [[row[i] for row in solution_list] for i in range(len(solution_list[0]))]
     height = len(sol)
@@ -333,6 +388,6 @@ def print_solution(solution_list, blockSize=100, name="solution"):
 
 
 if __name__ == "__main__":
-    fp = 'yarn_5.bff'
-    my_solved_grid = main(fp)
-    print_solution(my_solved_grid, blockSize=100, name=f"{fp}_solution")
+    fp = 'yarn_5.bff'  # define filepath
+    my_solved_grid = main(fp)  # solve
+    print_solution(my_solved_grid, blockSize=100, name=f"{fp}_solution")  # image output of solution
