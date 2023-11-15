@@ -1,6 +1,6 @@
 
 import copy
-import joblib
+import multiprocessing
 from sympy.utilities.iterables import multiset_permutations
 def count_o_in_2d_list(matrix):
     count = 0
@@ -250,8 +250,10 @@ def read_file(ftpr):
     block_list_B = ['B'] * B_block
     return grid, block_list_AC, block_list_B, lasers, goal_p
 
+
+
 def main():
-    filepath = 'mad_7.bff'
+    filepath = 'yarn_5.bff'
     grid_data, block_list_AC, block_list_B, lasers_data, goals = read_file(filepath)
 
     grid = Grid(grid_data)
@@ -260,24 +262,18 @@ def main():
     solver = Solver(grid, blocks, lasers_data, goals)
 
     n = count_o_in_2d_list(grid_data)
-    all_blocks = flatten_list([['o'] * n, flatten_list([block_list_AC,block_list_B])])
+    all_blocks = flatten_list([['o'] * n, flatten_list([block_list_AC, block_list_B])])
     all_per = list(multiset_permutations(all_blocks))
-    for per in all_per:
-        solved_grid = solver.solver(per)
+    with multiprocessing.Pool() as pool:
+        # Distribute the work among the processes
+        results = pool.map(solver.solver, all_per)
+
+    # Process the results
+    for solved_grid in results:
         if solved_grid:
             for row in solved_grid:
                 print(' '.join(row))
             break
-
-
-
-    """
-    pool_obj = multiprocessing.Pool()
-    solved_grid = pool_obj.map(solver.solver, all_per)
-
-        
-    """
-
 
 if __name__ == "__main__":
     main()
