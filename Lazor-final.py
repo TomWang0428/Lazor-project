@@ -34,6 +34,7 @@ def count_o_in_2d_list(matrix):
                 count += 1
     return count
 
+
 def vis_path(path,re_grid):
     """
         Function for visualize the laser path, no effect on solving
@@ -54,6 +55,7 @@ def vis_path(path,re_grid):
         t_regrid[path[i][0]][path[i][1]] = "1"
     return t_regrid
 
+
 def flatten_list(lst):
     """
         Function for flattening the list
@@ -73,6 +75,7 @@ def flatten_list(lst):
         else:
             flat_list.append(item)
     return flat_list
+
 
 class Grid:
     """
@@ -158,7 +161,6 @@ class Grid:
         return t_grid.grid
 
 
-
 class Block:
     """
     Represents a block with a specific type (like 'A', 'B', or 'C')
@@ -175,6 +177,7 @@ class Block:
            None
         """
         self.block_type = block_type
+
 
 class Laser:
     """
@@ -300,6 +303,7 @@ class Laser:
             return
         return flatten_list(path), flatten_list(pt_dir)
 
+
 class Solver:
     """
     Orchestrates the placement of blocks on the grid and checks whether the placement meets the puzzle's goals
@@ -368,6 +372,7 @@ class Solver:
             return True
         else:
             return False
+
 
 def read_file(ftpr):
     '''
