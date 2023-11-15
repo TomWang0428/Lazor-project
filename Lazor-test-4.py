@@ -1,7 +1,9 @@
-
 import copy
 import multiprocessing
 from sympy.utilities.iterables import multiset_permutations
+from PIL import Image
+
+
 def count_o_in_2d_list(matrix):
     count = 0
     for row in matrix:
@@ -251,9 +253,8 @@ def read_file(ftpr):
     return grid, block_list_AC, block_list_B, lasers, goal_p
 
 
-
-def main():
-    filepath = 'yarn_5.bff'
+def main(filepath):
+    #filepath = 'yarn_5.bff'
     grid_data, block_list_AC, block_list_B, lasers_data, goals = read_file(filepath)
 
     grid = Grid(grid_data)
@@ -273,7 +274,65 @@ def main():
         if solved_grid:
             for row in solved_grid:
                 print(' '.join(row))
-            break
+            return solved_grid
+            # break
+
+
+def get_colors():
+    '''
+    Colors map that the solution output will use:
+        'o' - White - place that can put blocks
+        'x' - Grey - place that must be left empty
+        'A' - Green - type A block
+        'B' - Black - type B block
+        'C' - Blue - type C block
+
+    **Returns**
+
+        color_map: *dict, int, tuple*
+            A dictionary that will correlate the key to a color.
+    '''
+    return {
+        'x': (128, 128, 128),
+        'o': (255, 255, 255),
+        'A': (0, 255, 0),
+        'B': (0, 0, 0),
+        'C': (0, 0, 255),
+    }
+
+
+def print_solution(solution_list, blockSize=100, name="solution"):
+    # nBlocks = len(solution_list)
+    sol = [[row[i] for row in solution_list] for i in range(len(solution_list[0]))]
+    height = len(sol)
+    width = len(sol[0])
+
+    dims_height = height * blockSize
+    dims_width = width * blockSize
+
+    colors = get_colors()
+
+    # Verify that all values in the maze are valid colors.
+    ERR_MSG = "Error, invalid maze value found!"
+    assert all([x in colors.keys() for row in sol for x in row]), ERR_MSG
+
+    img = Image.new("RGB", (dims_width, dims_height), color=(128, 128, 128))
+
+    # Parse "maze" into pixels
+    for jx in range(width):
+        for jy in range(height):
+            x = jx * blockSize
+            y = jy * blockSize
+            for i in range(blockSize):
+                for j in range(blockSize):
+                    img.putpixel((x + i, y + j), colors[sol[jx][jy]])
+
+    if not name.endswith(".png"):
+        name += ".png"
+    img.save("%s" % name)
+
 
 if __name__ == "__main__":
-    main()
+    fp = 'yarn_5.bff'
+    my_solved_grid = main(fp)
+    print_solution(my_solved_grid, blockSize=100, name=f"{fp}_solution")
